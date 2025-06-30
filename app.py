@@ -3,7 +3,7 @@ import re
 
 st.set_page_config(page_title="Legal Chat Assistant")
 
-Initialize session state
+#Initialize session state
 
 if "step" not in st.session_state: st.session_state.step = "start" if "doc_type" not in st.session_state: st.session_state.doc_type = "" if "answers" not in st.session_state: st.session_state.answers = {} if "last_input" not in st.session_state: st.session_state.last_input = ""
 

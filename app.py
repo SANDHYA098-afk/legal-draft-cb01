@@ -1,139 +1,81 @@
-import streamlit as st
-from fpdf import FPDF
-from io import BytesIO
-from datetime import datetime
+import streamlit as st from fpdf import FPDF from io import BytesIO
 
-st.set_page_config(page_title="Legal Drafting AI", page_icon="📄")
+Set page config
 
-# Sidebar
-with st.sidebar:
-    st.title("⚖ Legal Drafting Assistant")
-    st.markdown("""
-Draft professional legal documents easily!
+st.set_page_config(page_title="Legal Chatbot Assistant", page_icon="📄")
 
-*Created by:* Your Name  
-[GitHub](https://github.com/yourusername)  
-[LinkedIn](https://linkedin.com/in/yourprofile)
-""")
+Session init
 
-st.title("📑 AI-Powered Legal Document Generator")
+if "step" not in st.session_state: st.session_state.step = "start" if "doc_type" not in st.session_state: st.session_state.doc_type = "" if "answers" not in st.session_state: st.session_state.answers = {}
 
-# Document Types
-doc_types = {
-    "Non-Disclosure Agreement (NDA)": [
-        "Indian Contract Act, 1872",
-        "Information Technology Act, 2000"
-    ],
-    "Lease Agreement": [
-        "Rent Control Act, 1948",
-        "Transfer of Property Act, 1882"
-    ],
-    "Employment Contract": [
-        "Industrial Disputes Act, 1947",
-        "Shops and Establishments Act"
-    ],
-    "IT Services Agreement": [
-        "Information Technology Act, 2000",
-        "Indian Contract Act, 1872"
-    ],
-    "Education Consultancy Agreement": [
-        "Indian Contract Act, 1872",
-        "Education Act, 2009"
-    ],
-    "Freelance Work Contract": [
-        "Copyright Act, 1957",
-        "Indian Contract Act, 1872"
-    ],
-    "Research Collaboration MOU": [
-        "IPR Policy Guidelines",
-        "Science & Tech Policy"
-    ],
-    "Partnership Deed": [
-        "Partnership Act, 1932"
-    ]
-}
+Document types and laws
 
-# Form
-with st.form("legal_form"):
-    st.subheader("Step 1: Choose Document Type")
-    doc_type = st.selectbox("Select the type of legal document", list(doc_types.keys()))
+doc_types = { "Non-Disclosure Agreement (NDA)": ["Indian Contract Act, 1872", "Information Technology Act, 2000"], "Lease Agreement": ["Rent Control Act, 1948", "Transfer of Property Act, 1882"], "Employment Contract": ["Industrial Disputes Act, 1947", "Shops and Establishments Act"], "IT Services Agreement": ["Information Technology Act, 2000"], "Freelance Work Contract": ["Copyright Act, 1957", "Indian Contract Act, 1872"] }
 
-    st.subheader("Step 2: Enter Party A's Details")
-    a_name = st.text_input("Full Name (Party A)")
-    a_addr = st.text_input("Address (Party A)")
-    a_phone = st.text_input("Phone Number (Party A)")
-    a_email = st.text_input("Email (Party A, optional)")
+st.title("Legal Document Chat Assistant")
 
-    st.subheader("Step 3: Enter Party B's Details")
-    b_name = st.text_input("Full Name (Party B)")
-    b_addr = st.text_input("Address (Party B)")
-    b_phone = st.text_input("Phone Number (Party B)")
-    b_email = st.text_input("Email (Party B, optional)")
+Start conversation
 
-    st.subheader("Step 4: Select Governing Law")
-    law = st.selectbox("Applicable Law / Jurisdiction", doc_types[doc_type] + ["Other"])
-    if law == "Other":
-        law = st.text_input("Enter your own jurisdiction/law")
+if st.session_state.step == "start": st.markdown("Hello! I'm your Legal Drafting Assistant 🫠\n\nLet's get started with drafting your legal document.") doc_choice = st.selectbox("What type of document would you like to draft?", list(doc_types.keys())) if st.button("Next"): st.session_state.doc_type = doc_choice st.session_state.step = "party_a" st.experimental_rerun()
 
-    st.subheader("Step 5: Agreement Effective Date")
-    effective_date = st.date_input("Choose effective date", value=datetime.today())
+Party A info
 
-    submitted = st.form_submit_button("📄 Generate Document")
+elif st.session_state.step == "party_a": st.subheader("Enter Party A's Details") a_name = st.text_input("Full Name") a_addr = st.text_input("Residential Address") a_city = st.text_input("City") a_state = st.text_input("State") a_country = "India" a_phone = st.text_input("Contact Number") a_email = st.text_input("Email") if st.button("Next"): st.session_state.answers.update({ "a_name": a_name, "a_addr": a_addr, "a_city": a_city, "a_state": a_state, "a_country": a_country, "a_phone": a_phone, "a_email": a_email }) st.session_state.step = "party_b" st.experimental_rerun()
 
-# On Submit
-if submitted:
-    # Drafting the document text
-    content = f"""
-    {doc_type.upper()}
+Party B info
 
-    This agreement is entered into by and between:
+elif st.session_state.step == "party_b": st.subheader("Enter Party B's Details") b_name = st.text_input("Full Name") b_addr = st.text_input("Residential Address") b_city = st.text_input("City") b_state = st.text_input("State") b_country = "India" b_phone = st.text_input("Contact Number") b_email = st.text_input("Email") if st.button("Next"): st.session_state.answers.update({ "b_name": b_name, "b_addr": b_addr, "b_city": b_city, "b_state": b_state, "b_country": b_country, "b_phone": b_phone, "b_email": b_email }) st.session_state.step = "law" st.experimental_rerun()
 
-    PARTY A:
-    Name: {a_name}
-    Address: {a_addr}
-    Phone: {a_phone}
-    Email: {a_email if a_email else 'N/A'}
+Choose law
 
-    AND
+elif st.session_state.step == "law": st.subheader("Choose Governing Law") law_choice = st.selectbox("Select applicable law", doc_types[st.session_state.doc_type] + ["Other"]) if law_choice == "Other": law_choice = st.text_input("Enter your custom law") if st.button("Next"): st.session_state.answers["law"] = law_choice st.session_state.step = "confirm" st.experimental_rerun()
 
-    PARTY B:
-    Name: {b_name}
-    Address: {b_addr}
-    Phone: {b_phone}
-    Email: {b_email if b_email else 'N/A'}
+Confirm
 
-    Effective Date: {effective_date.strftime('%d %B %Y')}
-    Governing Law: {law}
+elif st.session_state.step == "confirm": st.subheader("Please confirm your details") for k, v in st.session_state.answers.items(): st.write(f"{k.replace('_', ' ').title()}: {v}") if st.button("Looks Good, Draft the Document"): st.session_state.step = "draft" st.experimental_rerun()
 
-    TERMS:
-    • This {doc_type.lower()} is governed under the laws of {law}.
-    • Both parties agree to abide by the terms in good faith.
-    • This agreement remains valid unless terminated in writing by either party.
+Draft and ask for PDF
 
-    NOTE: This is an AI-generated draft. Please consult a legal expert before official use.
-    """
+elif st.session_state.step == "draft": a = st.session_state.answers draft = f""" LEGAL DOCUMENT: {st.session_state.doc_type.upper()}
 
-    # Generate PDF
+This agreement is made between:
+
+PARTY A:
+Name: {a['a_name']}
+Address: {a['a_addr']}, {a['a_city']}, {a['a_state']}, {a['a_country']}
+Phone: {a['a_phone']}, Email: {a['a_email']}
+
+AND
+
+PARTY B:
+Name: {a['b_name']}
+Address: {a['b_addr']}, {a['b_city']}, {a['b_state']}, {a['b_country']}
+Phone: {a['b_phone']}, Email: {a['b_email']}
+
+Governing Law: {a['law']}
+
+Terms:
+This {st.session_state.doc_type.lower()} is governed under the above jurisdiction. Parties agree to honor terms.
+
+Disclaimer: This is an AI-generated draft.
+"""
+st.success("Here is your drafted document:")
+st.text_area("Drafted Legal Document", draft, height=350)
+
+if st.button("📄 Generate PDF"):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=14)
+    pdf.multi_cell(0, 10, f"LEGAL DOCUMENT: {st.session_state.doc_type.upper()}")
     pdf.set_font("Arial", size=12)
-    for line in content.split("\n"):
+    for line in draft.split('\n'):
         pdf.multi_cell(0, 10, line.strip())
-
-    # Convert to bytes
     pdf_output = BytesIO()
     pdf.output(pdf_output)
     pdf_output.seek(0)
 
-    st.success("✅ Document successfully generated!")
-
-    # Show preview (optional)
-    st.text_area("📃 Document Preview", content, height=300)
-
-    # Download button
     st.download_button(
-        label="📥 Download as PDF",
+        label="📅 Download PDF",
         data=pdf_output,
         file_name="legal_document.pdf",
         mime="application/pdf"

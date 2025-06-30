@@ -12,7 +12,7 @@ Document types and laws
 
 doc_types = { "Non-Disclosure Agreement (NDA)": ["Indian Contract Act, 1872", "Information Technology Act, 2000"], "Lease Agreement": ["Rent Control Act, 1948", "Transfer of Property Act, 1882"], "Employment Contract": ["Industrial Disputes Act, 1947", "Shops and Establishments Act"], "IT Services Agreement": ["Information Technology Act, 2000"], "Freelance Work Contract": ["Copyright Act, 1957", "Indian Contract Act, 1872"] }
 
-st.title("Legal Document Chat Assistant")
+st.title("👋 Legal Document Chat Assistant")
 
 Start conversation
 
@@ -63,12 +63,14 @@ st.success("Here is your drafted document:")
 st.text_area("Drafted Legal Document", draft, height=350)
 
 if st.button("📄 Generate PDF"):
+    import re
+    safe_content = re.sub(r'[^\x00-\x7F]+', '', draft)
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=14)
     pdf.multi_cell(0, 10, f"LEGAL DOCUMENT: {st.session_state.doc_type.upper()}")
     pdf.set_font("Arial", size=12)
-    for line in draft.split('\n'):
+    for line in safe_content.split('\n'):
         pdf.multi_cell(0, 10, line.strip())
     pdf_output = BytesIO()
     pdf.output(pdf_output)

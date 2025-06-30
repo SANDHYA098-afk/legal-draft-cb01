@@ -5,15 +5,24 @@ st.set_page_config(page_title="Legal Chat Assistant")
 
 #Initialize session state
 
-if "step" not in st.session_state: st.session_state.step = "start" if "doc_type" not in st.session_state: st.session_state.doc_type = "" if "answers" not in st.session_state: st.session_state.answers = {} if "last_input" not in st.session_state: st.session_state.last_input = ""
+if "step" not in st.session_state:
+    st.session_state.step = "start"
 
-Document types and laws
+if "doc_type" not in st.session_state:
+    st.session_state.doc_type = ""
+
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
+
+if "last_input" not in st.session_state:
+    st.session_state.last_input = ""
+#Document types and laws
 
 doc_types = { "Non-Disclosure Agreement (NDA)": ["Indian Contract Act, 1872", "Information Technology Act, 2000"], "Lease Agreement": ["Rent Control Act, 1948", "Transfer of Property Act, 1882"], "Employment Contract": ["Industrial Disputes Act, 1947", "Shops and Establishments Act"], "IT Services Agreement": ["Information Technology Act, 2000"], "Freelance Work Contract": ["Copyright Act, 1957", "Indian Contract Act, 1872"] }
 
 st.title("Legal Document Chat Assistant")
 
-Chat interaction
+#Chat interaction
 
 user_input = st.text_input("You:")
 

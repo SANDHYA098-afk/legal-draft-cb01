@@ -1,4 +1,5 @@
-import streamlit as st import re
+import streamlit as st 
+import re
 
 st.set_page_config(page_title="Legal Chat Assistant")
 

@@ -1,59 +1,85 @@
-import streamlit as st import datetime import requests
+import streamlit as st
+from io import StringIO
 
-st.set_page_config(page_title="Legal Chat Assistant")
+# Page configuration
+st.set_page_config(page_title="Legal Document Assistant", page_icon="📄")
 
-Initialize session state
+# Sidebar
+with st.sidebar:
+    st.title("⚖ Legal Drafting AI")
+    st.markdown("""
+Welcome to your legal assistant!  
+Draft professional legal documents with ease.
 
-if "step" not in st.session_state: st.session_state.step = "start" if "doc_type" not in st.session_state: st.session_state.doc_type = "" if "answers" not in st.session_state: st.session_state.answers = {}
+*Made by:* Your Name  
+[GitHub](https://github.com/yourusername) | [LinkedIn](https://linkedin.com/in/yourprofile)
+    """)
 
-st.title("🧾 Legal Document Drafting Assistant") st.markdown("This assistant helps you generate legal documents and get legal term clarifications.")
+# Title
+st.title("📄 Legal Document Drafting Assistant")
+st.caption("Answer a few simple questions to generate a professional-looking legal agreement.")
 
-Step 1: Ask for the document type
+# Initialize session
+if "step" not in st.session_state:
+    st.session_state.step = 0
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
+if "current_input" not in st.session_state:
+    st.session_state.current_input = ""
 
-if st.session_state.step == "start": doc_type = st.text_input("What type of legal document do you want to draft? (e.g., NDA, Lease Agreement, Contract)") if doc_type: st.session_state.doc_type = doc_type st.session_state.step = "collect_info"
+# Questions with friendly prompts
+questions = [
+    "First, what type of legal document would you like to draft? (e.g., NDA, lease agreement, contract)",
+    "Great! Who is Party A? (Full name)",
+    "And who is Party B? (Full name)",
+    "Under which jurisdiction should this agreement be governed?",
+    "Finally, from which date should this agreement become effective? (e.g., 01/07/2025)"
+]
 
-Step 2: Collect required information
+# Ask one question at a time
+if st.session_state.step < len(questions):
+    question = questions[st.session_state.step]
+    st.markdown(f"*Q{st.session_state.step + 1}:* {question}")
 
-elif st.session_state.step == "collect_info": answers = st.session_state.answers
+    with st.form(key="input_form", clear_on_submit=True):
+        user_input = st.text_input("Your answer:")
+        submitted = st.form_submit_button("Submit")
 
-if "party_a" not in answers:
-    answers["party_a"] = st.text_input("Enter the name of Party A")
-elif "party_b" not in answers:
-    answers["party_b"] = st.text_input("Enter the name of Party B")
-elif "effective_date" not in answers:
-    answers["effective_date"] = st.date_input("Enter the effective date")
-elif "duration" not in answers:
-    answers["duration"] = st.number_input("Enter the duration of the agreement in years", min_value=1)
-elif "jurisdiction" not in answers:
-    answers["jurisdiction"] = st.text_input("Enter the governing jurisdiction (e.g., State/Country)")
+        if submitted and user_input.strip():
+            st.session_state.answers[f'q{st.session_state.step}'] = user_input.strip()
+            st.session_state.step += 1
+            st.experimental_rerun()
+
 else:
-    st.session_state.step = "generate"
+    q = st.session_state.answers
+    document = f"""
+    📄 *DRAFTED {q['q0'].upper()} DOCUMENT*
 
-Step 3: Generate and show the document
+    This {q['q0']} is made between *{q['q1']}* and *{q['q2']}*,  
+    effective from *{q['q4']}, and governed by the laws of **{q['q3']}*.
 
-elif st.session_state.step == "generate": a = st.session_state.answers doc = f""" This {st.session_state.doc_type} is made and entered into on {a['effective_date'].strftime('%B %d, %Y')} by and between {a['party_a']} and {a['party_b']}.
+    ---
+    *TERMS & CONDITIONS*  
+    • Both parties agree to the terms laid out in good faith.  
+    • This agreement remains valid until mutually terminated or superseded.
 
-1. Purpose: The parties agree to the terms and conditions of this {st.session_state.doc_type} to facilitate a professional relationship.
+    This is an AI-generated draft. Please consult a legal advisor before official use.
+    """
 
+    st.success("✅ Your Legal Document is Ready!")
+    st.markdown(document)
 
-2. Term: This agreement shall remain in effect for {a['duration']} years from the effective date.
+    # Download as text file
+    draft_file = StringIO(document)
+    st.download_button(
+        label="📥 Download Document as .txt",
+        data=draft_file,
+        file_name="legal_draft.txt",
+        mime="text/plain"
+    )
 
-
-3. Jurisdiction: This agreement shall be governed by and construed in accordance with the laws of {a['jurisdiction']}.
-
-
-
-IN WITNESS WHEREOF, the parties have executed this agreement as of the date written above.
-
-
----
-
-{a['party_a']}                      {a['party_b']} """ st.subheader("📝 Drafted Legal Document") st.text_area("Preview:", value=doc, height=400) st.download_button("📄 Download as Text", data=doc, file_name="Drafted_Legal_Document.txt")
-
-Module 2: Legal Q&A Section
-
-st.markdown("---") st.subheader("❓ Ask a Legal Question (Canada)") user_query = st.text_input("Enter your question about a legal term or concept:")
-
-def fetch_legal_info(query): # Simulated API call - you can replace this with real CanLII or legal info search API simulated_responses = { "void and voidable contract": { "answer": "A void contract is invalid from the beginning, while a voidable contract is valid until one party chooses to void it.", "source": "https://www.canlii.org/en/ca/laws.html" }, "consideration in contract": { "answer": "Consideration is something of value exchanged between parties, essential for a valid contract.", "source": "https://www.canlii.org/en/ca/laws.html" } } for key in simulated_responses: if key in query.lower(): return simulated_responses[key] return { "answer": "Sorry, I couldn’t find a legal answer for that. Please refine your query or try again later.", "source": "https://www.canlii.org" }
-
-if user_query: result = fetch_legal_info(user_query) st.markdown(f"Answer: {result['answer']}") st.markdown(f"📚 View Source")
+    # Reset
+    if st.button("🔄 Start Over"):
+        st.session_state.step = 0
+        st.session_state.answers = {}
+        st.experimental_rerun()
